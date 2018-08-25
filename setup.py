@@ -46,7 +46,7 @@ setup(
     entry_points={
     },
     #
-    install_requires=['future'],
+    install_requires=['future', 'configparser; python_version < "3.0"'],
     packages=find_packages(exclude=['rcsb.utils.tests-config', 'rcsb.utils.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
