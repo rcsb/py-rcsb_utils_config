@@ -2,7 +2,8 @@
 
 ### Introduction
 
-This module contains a utilities for managing configuration options.
+This module contains a utilities for managing configuration options
+using ini/configparser and YAML format configuration files.
 
 ### Installation
 

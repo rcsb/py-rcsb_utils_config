@@ -5,6 +5,7 @@
 #   3-Jul-2018  jdw update CLI entry points and dependencies
 #  21-Aug-2018  jdw version adjustments
 #  22-Aug-2018  jdw adjust for namespace packaging
+#   3-Oct-2018  jdw add 'ruamel.yaml' dependency
 #
 import re
 
@@ -46,7 +47,7 @@ setup(
     entry_points={
     },
     #
-    install_requires=['future', 'configparser; python_version < "3.0"'],
+    install_requires=['future', 'configparser; python_version < "3.0"', 'ruamel.yaml'],
     packages=find_packages(exclude=['rcsb.utils.tests-config', 'rcsb.utils.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
