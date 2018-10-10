@@ -4,4 +4,5 @@
 26-Aug-2018  - V0.11 Tweak testing configuration
  3-Oct-2018  - V0.12 Add YAML support, roundtrip translation, and injection
                      of environmental variables for ini/configparser format files.
+10-Oct-2018  - V0.13 Added methods getConfigPath() adn getMockTopPath()
 

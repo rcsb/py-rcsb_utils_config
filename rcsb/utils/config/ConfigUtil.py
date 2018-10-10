@@ -12,6 +12,7 @@
 #   13-Sep-2018  jdw add YAML support and read/write methods.
 #   16-Sep-2018  jdw add support importing a CommentedMap
 #    3-Oct-2018  jdw add support to import environment for ini/configparser format files.
+#   10-Oct-2018  jdw added methods getConfigPath() adn getMockTopPath()
 ##
 """
  Manage simple configuration options.
@@ -56,7 +57,7 @@ class ConfigUtil(object):
 
         """
         myFallbackPath = os.getenv(fallbackEnvPath, 'setup.cfg') if fallbackEnvPath else None
-        myConfigPath = configPath if configPath is not None else myFallbackPath
+        self.__myConfigPath = configPath if configPath is not None else myFallbackPath
         #
         self.__defaultSectionName = defaultSectionName
         #
@@ -66,10 +67,16 @@ class ConfigUtil(object):
         # This is the internal container for configuration data from all sources
         self.__cD = {}
         #
-        if myConfigPath:
-            self.__configFormat, self.__cD = self.updateConfig(myConfigPath, configFormat, **kwargs)
+        if self.__myConfigPath:
+            self.__configFormat, self.__cD = self.updateConfig(self.__myConfigPath, configFormat, **kwargs)
             if len(self.__cD) < 1:
-                logger.warning("No configuration information imported - configuration path is %s (%s)" % (myConfigPath, configFormat))
+                logger.warning("No configuration information imported - configuration path is %s (%s)" % (self.__myConfigPath, configFormat))
+
+    def getConfigPath(self):
+        return self.__myConfigPath
+
+    def getMockTopPath(self):
+        return self.__mockTopPath
 
     def importConfig(self, dObj):
         """Import configuration options from the input dictionary-like object.
