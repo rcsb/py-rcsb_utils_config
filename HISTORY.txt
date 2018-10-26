@@ -5,4 +5,6 @@
  3-Oct-2018  - V0.12 Add YAML support, roundtrip translation, and injection
                      of environmental variables for ini/configparser format files.
 10-Oct-2018  - V0.13 Added methods getConfigPath() adn getMockTopPath()
+23-Oct-2018  - V0.14 Fix export method for configparser() style configuration files
+26-Oct-2018  - V0.15 Improve default configuration format handling
 

@@ -13,6 +13,9 @@
 #   16-Sep-2018  jdw add support importing a CommentedMap
 #    3-Oct-2018  jdw add support to import environment for ini/configparser format files.
 #   10-Oct-2018  jdw added methods getConfigPath() adn getMockTopPath()
+#   23-Oct-2018  jdw refine export method to manually extract content from configparser structure
+#   24-Oct-2018  jdw if config format is not specified perceive the format from the config filename extension
+#                    change default section name management.
 ##
 """
  Manage simple configuration options.
@@ -42,16 +45,16 @@ logger = logging.getLogger(__name__)
 
 class ConfigUtil(object):
 
-    def __init__(self, configPath=None, defaultSectionName='DEFAULT', fallbackEnvPath=None, mockTopPath=None, configFormat='ini', **kwargs):
+    def __init__(self, configPath=None, defaultSectionName='DEFAULT', fallbackEnvPath=None, mockTopPath=None, configFormat=None, **kwargs):
         """Manage simple configuration options stored in INI (Python configparser-style) or YAML configuration files.
 
 
         Args:
             configPath (str, optional): Configuration file path
             defaultSectionName (str, optional): Name of configuration section holding default option values (e.g. DEFAULT)
-            fallbackEnvPath (None, optional): Environmental variable holding configuration file path
-            mockTopPath (str, optional): Mockpath is prepended to path configuration options if it specified
-            configFormat (str, optional): Configuration file format (e.g. ini or yaml)
+            fallbackEnvPath (str, optional): Environmental variable holding configuration file path
+            mockTopPath (str, optional): Mockpath is prepended to path configuration options if it specified (default=None)
+            configFormat (str, optional): Configuration file format (e.g. ini or yaml default=ini)
             **kwargs: importEnvironment(bool) imports environment as default values for ini/configparser format files
 
 
@@ -67,8 +70,22 @@ class ConfigUtil(object):
         # This is the internal container for configuration data from all sources
         self.__cD = {}
         #
+        #
+        self.__configFormat = configFormat
+        if not self.__configFormat:
+            # Perceive the format from the file path or set default to 'ini'
+            if self.__myConfigPath:
+                _, ext = os.path.splitext(self.__myConfigPath)
+                if ext[1:].lower() in ['yaml', 'yml']:
+                    self.__configFormat = 'yaml'
+                else:
+                    self.__configFormat = 'ini'
+            else:
+                self.__configFormat = 'ini'
+        #
+        logger.debug("Using config path %s format %s" % (self.__myConfigPath, self.__configFormat))
         if self.__myConfigPath:
-            self.__configFormat, self.__cD = self.updateConfig(self.__myConfigPath, configFormat, **kwargs)
+            self.__configFormat, self.__cD = self.__updateConfig(self.__myConfigPath, self.__configFormat, **kwargs)
             if len(self.__cD) < 1:
                 logger.warning("No configuration information imported - configuration path is %s (%s)" % (self.__myConfigPath, configFormat))
 
@@ -104,15 +121,16 @@ class ConfigUtil(object):
 
     def exportConfig(self, sectionName=None):
         try:
+            cD = self.__extractDict(self.__cD) if isinstance(self.__cD, cp) else self.__cD
             if sectionName:
-                return copy.deepcopy(self.__cD[sectionName])
+                return copy.deepcopy(cD[sectionName])
             else:
-                return copy.deepcopy(self.__cD)
+                return copy.deepcopy(cD)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return None
 
-    def updateConfig(self, filePath, configFormat=None, **kwargs):
+    def __updateConfig(self, filePath, configFormat=None, **kwargs):
         """Update the current configuration options with data from the input configuration file.
 
         Args:
@@ -140,7 +158,7 @@ class ConfigUtil(object):
                 cD = self.__readYamlFile(filePath, roundTrip=rt)
                 configFormat = 'yaml'
         except Exception as e:
-            logger.exception("Failing with filePath %r format %r" % (filePath, configFormat))
+            logger.exception("Failing with filePath %r format %r with %s" % (filePath, configFormat, str(e)))
         #
         return configFormat, cD
 
@@ -171,7 +189,7 @@ class ConfigUtil(object):
             ok = False
         return ok
 
-    def get(self, name, default=None, sectionName='DEFAULT'):
+    def get(self, name, default=None, sectionName=None):
         """Return configuration value of input configuration option.
 
         Args:
@@ -185,7 +203,7 @@ class ConfigUtil(object):
         """
         val = default
         try:
-            mySection = sectionName if sectionName != 'DEFAULT' else self.__defaultSectionName
+            mySection = sectionName if sectionName else self.__defaultSectionName
             if '.' in name:
                 val = self.__getKeyValue(self.__cD[mySection], name)
             else:
@@ -194,11 +212,11 @@ class ConfigUtil(object):
             val = str(val) if self.__configFormat == 'ini' else val
         except Exception as e:
             if False:
-                logger.debug("Missing config option %r assigned default value %r (%s)" % (name, default, str(e)))
+                logger.debug("Missing config option %r (%r) assigned default value %r (%s)" % (name, mySection, default, str(e)))
         #
         return copy.deepcopy(val)
 
-    def getPath(self, name, default=None, sectionName='DEFAULT'):
+    def getPath(self, name, default=None, sectionName=None):
         """ Return path associated with the input configuration option. This method supports mocking where
         the MOCK_TOP_PATH will be prepended to the configuration path.
 
@@ -216,11 +234,11 @@ class ConfigUtil(object):
             val = self.get(name, default=default, sectionName=sectionName)
             val = os.path.join(self.__mockTopPath, val) if self.__mockTopPath else val
         except Exception as e:
-            logger.debug("Missing config option %r assigned default value %r (%s)" % (name, default, str(e)))
+            logger.debug("Missing config option %r (%r) assigned default value %r (%s)" % (name, sectionName, default, str(e)))
         #
         return val
 
-    def getList(self, name, default=None, sectionName='DEFAULT', delimiter=','):
+    def getList(self, name, default=None, sectionName=None, delimiter=','):
         vL = default if default is not None else []
         try:
             val = self.get(name, default=default, sectionName=sectionName)
@@ -229,11 +247,11 @@ class ConfigUtil(object):
             else:
                 vL = str(val).split(delimiter)
         except Exception as e:
-            logger.debug("Missing config option list %r assigned default value %r (%s)" % (name, default, str(e)))
+            logger.debug("Missing config option list %r (%r) assigned default value %r (%s)" % (name, sectionName, default, str(e)))
         #
         return vL
 
-    def getHelper(self, name, default=None, sectionName='DEFAULT', **kwargs):
+    def getHelper(self, name, default=None, sectionName=None, **kwargs):
         """Return an instance of module/class corresponding to the configuration module path.
 
 
@@ -252,7 +270,7 @@ class ConfigUtil(object):
         try:
             val = self.get(name, default=default, sectionName=sectionName)
         except Exception as e:
-            logger.error("Missing configuration option %r assigned default value %r (%s)" % (name, default, str(e)))
+            logger.error("Missing configuration option %r (%r) assigned default value %r (%s)" % (name, sectionName, default, str(e)))
         #
         return self.__getHelper(val, **kwargs)
 
@@ -353,6 +371,7 @@ class ConfigUtil(object):
         """
         yaml = ruamel.yaml.YAML()
         yaml.preserve_quotes = True
+        yaml.width = kwargs.get("width", 120)
         yaml.indent(mapping=4, sequence=6, offset=4)
         yaml.explicit_start = True
         try:
