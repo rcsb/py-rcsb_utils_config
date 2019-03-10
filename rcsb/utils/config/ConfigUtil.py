@@ -16,6 +16,9 @@
 #   23-Oct-2018  jdw refine export method to manually extract content from configparser structure
 #   24-Oct-2018  jdw if config format is not specified perceive the format from the config filename extension
 #                    change default section name management.
+#    4-Jan-2019  jdw add optional arguments to getPath(...,prefixName=None, prefixSectionName=None)
+#                    add methods getDefaultSectionName(), replaceSectionName(), and getSectionNameReplacement()
+#   10-Mar-2019  jdw add method getEnvValue() to dereference config option as an environmental variable
 ##
 """
  Manage simple configuration options.
@@ -71,6 +74,8 @@ class ConfigUtil(object):
         self.__cD = {}
         #
         #
+        self.__sectionNameD = {'DEFAULT': defaultSectionName}
+        #
         self.__configFormat = configFormat
         if not self.__configFormat:
             # Perceive the format from the file path or set default to 'ini'
@@ -94,6 +99,24 @@ class ConfigUtil(object):
 
     def getMockTopPath(self):
         return self.__mockTopPath
+
+    def getDefaultSectionName(self):
+        return self.__defaultSectionName
+
+    def replaceSectionName(self, orgSectionName, replaceSectionName):
+        """ Set an replacement section name that will override the section name for input requests.
+        """
+        try:
+            self.__sectionNameD[orgSectionName] = replaceSectionName
+            return True
+        except Exception:
+            return False
+
+    def getSectionNameReplacement(self, orgSectionName):
+        try:
+            return self.__sectionNameD[orgSectionName] if orgSectionName in self.__sectionNameD else orgSectionName
+        except Exception:
+            return orgSectionName
 
     def importConfig(self, dObj):
         """Import configuration options from the input dictionary-like object.
@@ -195,7 +218,7 @@ class ConfigUtil(object):
         Args:
             name (str): configuration option name
             default (str, optional): default value returned if no configuration option is provided
-            sectionName (str, optional): configuration section name, a simple key
+            sectionName (str, optional): configuration section name, a simple key (default = defaultSectionName from object)
 
         Returns:
             str: configuration option value
@@ -204,6 +227,7 @@ class ConfigUtil(object):
         val = default
         try:
             mySection = sectionName if sectionName else self.__defaultSectionName
+            mySection = self.getSectionNameReplacement(mySection)
             if '.' in name:
                 val = self.__getKeyValue(self.__cD[mySection], name)
             else:
@@ -216,14 +240,16 @@ class ConfigUtil(object):
         #
         return copy.deepcopy(val)
 
-    def getPath(self, name, default=None, sectionName=None):
-        """ Return path associated with the input configuration option. This method supports mocking where
-        the MOCK_TOP_PATH will be prepended to the configuration path.
+    def getPath(self, name, default=None, sectionName=None, prefixName=None, prefixSectionName=None):
+        """ Return path associated with the input configuration option and an option prefix path.
+            This method supports mocking where the MOCK_TOP_PATH will be prepended to the configuration path.
 
         Args:
             name (str): configuration option name
             default (str, optional): default value returned if no configuration option is provided
             sectionName (str, optional): configuration section name, a simple key
+            prefixName(str, optional):  optional configuration option for a prefix path
+            prefixSectionName(str, optional):  optional configuration section name for a prefix path option (default = defaultSectionName from object)
 
         Returns:
             str: configuration path
@@ -232,9 +258,36 @@ class ConfigUtil(object):
         val = default
         try:
             val = self.get(name, default=default, sectionName=sectionName)
-            val = os.path.join(self.__mockTopPath, val) if self.__mockTopPath else val
+            myPrefixSectionName = prefixSectionName if prefixSectionName else self.__defaultSectionName
+            prefixPath = self.get(prefixName, default=None, sectionName=myPrefixSectionName) if prefixName else None
+
+            if prefixPath:
+                val = os.path.join(self.__mockTopPath, prefixPath, val) if self.__mockTopPath else os.path.join(prefixPath, val)
+            else:
+                val = os.path.join(self.__mockTopPath, val) if self.__mockTopPath else val
         except Exception as e:
             logger.debug("Missing config option %r (%r) assigned default value %r (%s)" % (name, sectionName, default, str(e)))
+        #
+        return val
+
+    def getEnvValue(self, name, default=None, sectionName=None):
+        """ Return the value of input configuration option (environmental variable name).
+
+        Args:
+            name (str): configuration option name (environmental variable)
+            default (str, optional): default value returned if no configuration option is provided
+            sectionName (str, optional): configuration section name, a simple key
+
+        Returns:
+            str: option(environmental variable) value
+
+        """
+        val = default
+        try:
+            varName = self.get(name, default=None, sectionName=sectionName)
+            val = os.environ.get(varName, default)
+        except Exception as e:
+            logger.debug("Failed processing environmental variable config option %r (%r) assigned default value %r (%s)" % (name, sectionName, default, str(e)))
         #
         return val
 

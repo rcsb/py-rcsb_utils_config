@@ -7,4 +7,8 @@
 10-Oct-2018  - V0.13 Added methods getConfigPath() adn getMockTopPath()
 23-Oct-2018  - V0.14 Fix export method for configparser() style configuration files
 26-Oct-2018  - V0.15 Improve default configuration format handling
+ 4-Jan-2019  - V0.16 Add optional arguments to getPath(...,prefixName=None, prefixSectionName=None)
+                     Add methods getDefaultSectionName(), replaceSectionName(), and getSectionNameReplacement()
+10-Mar-2019  - V0.17 Add getEnvValue() method to dereference an option as an environmental variable
+
 

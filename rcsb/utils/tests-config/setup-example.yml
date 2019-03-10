@@ -14,3 +14,4 @@ Section1:
   CHEM_COMP_REPO_PATH: MOCK_CHEM_COMP_REPO
   PDBX_REPO_PATH: MOCK_PDBX_SANDBOX
   DICT_METHOD_HELPER_MODULE: rcsb.utils.config.ExampleHelper # this is another helper method
+  ENV_OPTION_A: TEST_ENV_VAR

@@ -6,6 +6,7 @@
 #
 # Updates:
 #  13-Sep-2018 jdw add YAML support and read/write methods.
+#  10-Mar-2019 jdw add tests for .getEnvValue()
 #
 ##
 """
@@ -103,6 +104,13 @@ class ConfigUtilTests(unittest.TestCase):
 
             tv = helperMethod.echo('test_value')
             self.assertEqual(tv, 'test_value')
+            #
+            tEnv = "TEST_ENV_VAR"
+            tVal = "TEST_ENV_VAR_VALUE"
+            os.environ[tEnv] = tVal
+            eVal = self.__cfgOb.getEnvValue('ENV_OPTION_A', sectionName=sName)
+            self.assertEqual(tVal, eVal)
+            #
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -140,6 +148,12 @@ class ConfigUtilTests(unittest.TestCase):
 
             tv = helperMethod.echo('test_value')
             self.assertEqual(tv, 'test_value')
+            #
+            tEnv = "TEST_ENV_VAR"
+            tVal = "TEST_ENV_VAR_VALUE"
+            os.environ[tEnv] = tVal
+            eVal = cfgOb.getEnvValue('ENV_OPTION_A', sectionName=sName)
+            self.assertEqual(tVal, eVal)
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
