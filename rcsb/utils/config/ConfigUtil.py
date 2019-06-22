@@ -47,8 +47,7 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigUtil(object):
-
-    def __init__(self, configPath=None, defaultSectionName='DEFAULT', fallbackEnvPath=None, mockTopPath=None, configFormat=None, **kwargs):
+    def __init__(self, configPath=None, defaultSectionName="DEFAULT", fallbackEnvPath=None, mockTopPath=None, configFormat=None, **kwargs):
         """Manage simple configuration options stored in INI (Python configparser-style) or YAML configuration files.
 
 
@@ -62,7 +61,7 @@ class ConfigUtil(object):
 
 
         """
-        myFallbackPath = os.getenv(fallbackEnvPath, 'setup.cfg') if fallbackEnvPath else None
+        myFallbackPath = os.getenv(fallbackEnvPath, "setup.cfg") if fallbackEnvPath else None
         self.__myConfigPath = configPath if configPath is not None else myFallbackPath
         #
         self.__defaultSectionName = defaultSectionName
@@ -74,25 +73,25 @@ class ConfigUtil(object):
         self.__cD = {}
         #
         #
-        self.__sectionNameD = {'DEFAULT': defaultSectionName}
+        self.__sectionNameD = {"DEFAULT": defaultSectionName}
         #
         self.__configFormat = configFormat
         if not self.__configFormat:
             # Perceive the format from the file path or set default to 'ini'
             if self.__myConfigPath:
                 _, ext = os.path.splitext(self.__myConfigPath)
-                if ext[1:].lower() in ['yaml', 'yml']:
-                    self.__configFormat = 'yaml'
+                if ext[1:].lower() in ["yaml", "yml"]:
+                    self.__configFormat = "yaml"
                 else:
-                    self.__configFormat = 'ini'
+                    self.__configFormat = "ini"
             else:
-                self.__configFormat = 'ini'
+                self.__configFormat = "ini"
         #
-        logger.debug("Using config path %s format %s" % (self.__myConfigPath, self.__configFormat))
+        logger.debug("Using config path %s format %s", self.__myConfigPath, self.__configFormat)
         if self.__myConfigPath:
             self.__configFormat, self.__cD = self.__updateConfig(self.__myConfigPath, self.__configFormat, **kwargs)
-            if len(self.__cD) < 1:
-                logger.warning("No configuration information imported - configuration path is %s (%s)" % (self.__myConfigPath, configFormat))
+            if not self.__cD:
+                logger.warning("No configuration information imported - configuration path is %s (%s)", self.__myConfigPath, configFormat)
 
     def getConfigPath(self):
         return self.__myConfigPath
@@ -136,9 +135,9 @@ class ConfigUtil(object):
             elif isinstance(dObj, cp):
                 self.__cD.update(self.__extractDict(dObj))
             else:
-                logger.error("Cannot import object type %r" % type(dObj))
+                logger.error("Cannot import object type %r", type(dObj))
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
 
         return False
 
@@ -150,7 +149,7 @@ class ConfigUtil(object):
             else:
                 return copy.deepcopy(cD)
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return None
 
     def __updateConfig(self, filePath, configFormat=None, **kwargs):
@@ -172,16 +171,16 @@ class ConfigUtil(object):
         cD = None
         try:
             cf = configFormat if configFormat else self.__configFormat
-            if cf.lower() in ['ini', 'configparser']:
+            if cf.lower() in ["ini", "configparser"]:
                 useEnv = kwargs.get("importEnvironment", False)
                 cD = self.__readIniFile(filePath, useEnv=useEnv, **kwargs)
-                configFormat = 'ini'
-            elif cf.lower() in ['yaml']:
+                configFormat = "ini"
+            elif cf.lower() in ["yaml"]:
                 rt = kwargs.get("roundTrip", True)
                 cD = self.__readYamlFile(filePath, roundTrip=rt)
-                configFormat = 'yaml'
+                configFormat = "yaml"
         except Exception as e:
-            logger.exception("Failing with filePath %r format %r with %s" % (filePath, configFormat, str(e)))
+            logger.exception("Failing with filePath %r format %r with %s", filePath, configFormat, str(e))
         #
         return configFormat, cD
 
@@ -199,13 +198,13 @@ class ConfigUtil(object):
         """
         cf = configFormat if configFormat else self.__configFormat
         #
-        if cf == 'ini':
+        if cf == "ini":
             if not isinstance(self.__cD, cp):
-                cD = self.__createConfigParseObj(self.__cD, delimiter=';')
+                cD = self.__createConfigParseObj(self.__cD, delimiter=";")
                 ok = self.__writeIniFile(filePath, cD, **kwargs)
             else:
                 ok = self.__writeIniFile(filePath, self.__cD, **kwargs)
-        elif cf == 'yaml':
+        elif cf == "yaml":
             cD = self.__extractDict(self.__cD) if isinstance(self.__cD, cp) else self.__cD
             ok = self.__writeYamlFile(filePath, cD, **kwargs)
         else:
@@ -224,19 +223,20 @@ class ConfigUtil(object):
             str: configuration option value
 
         """
+        logMissing = False
         val = default
         try:
             mySection = sectionName if sectionName else self.__defaultSectionName
             mySection = self.getSectionNameReplacement(mySection)
-            if '.' in name:
+            if "." in name:
                 val = self.__getKeyValue(self.__cD[mySection], name)
             else:
                 val = self.__cD[mySection][name]
             #
-            val = str(val) if self.__configFormat == 'ini' else val
+            val = str(val) if self.__configFormat == "ini" else val
         except Exception as e:
-            if False:
-                logger.debug("Missing config option %r (%r) assigned default value %r (%s)" % (name, mySection, default, str(e)))
+            if logMissing:
+                logger.debug("Missing config option %r (%r) assigned default value %r (%s)", name, mySection, default, str(e))
         #
         return copy.deepcopy(val)
 
@@ -266,7 +266,7 @@ class ConfigUtil(object):
             else:
                 val = os.path.join(self.__mockTopPath, val) if self.__mockTopPath else val
         except Exception as e:
-            logger.debug("Missing config option %r (%r) assigned default value %r (%s)" % (name, sectionName, default, str(e)))
+            logger.debug("Missing config option %r (%r) assigned default value %r (%s)", name, sectionName, default, str(e))
         #
         return val
 
@@ -287,11 +287,11 @@ class ConfigUtil(object):
             varName = self.get(name, default=None, sectionName=sectionName)
             val = os.environ.get(varName, default)
         except Exception as e:
-            logger.debug("Failed processing environmental variable config option %r (%r) assigned default value %r (%s)" % (name, sectionName, default, str(e)))
+            logger.debug("Failed processing environmental variable config option %r (%r) assigned default value %r (%s)", name, sectionName, default, str(e))
         #
         return val
 
-    def getList(self, name, default=None, sectionName=None, delimiter=','):
+    def getList(self, name, default=None, sectionName=None, delimiter=","):
         vL = default if default is not None else []
         try:
             val = self.get(name, default=default, sectionName=sectionName)
@@ -300,7 +300,7 @@ class ConfigUtil(object):
             else:
                 vL = str(val).split(delimiter)
         except Exception as e:
-            logger.debug("Missing config option list %r (%r) assigned default value %r (%s)" % (name, sectionName, default, str(e)))
+            logger.debug("Missing config option list %r (%r) assigned default value %r (%s)", name, sectionName, default, str(e))
         #
         return vL
 
@@ -323,23 +323,23 @@ class ConfigUtil(object):
         try:
             val = self.get(name, default=default, sectionName=sectionName)
         except Exception as e:
-            logger.error("Missing configuration option %r (%r) assigned default value %r (%s)" % (name, sectionName, default, str(e)))
+            logger.error("Missing configuration option %r (%r) assigned default value %r (%s)", name, sectionName, default, str(e))
         #
         return self.__getHelper(val, **kwargs)
 
     def __getHelper(self, modulePath, **kwargs):
         aObj = None
         try:
-            aMod = __import__(modulePath, globals(), locals(), [''])
+            aMod = __import__(modulePath, globals(), locals(), [""])
             sys.modules[modulePath] = aMod
             #
             # Strip off any leading path to the module before we instaniate the object.
-            mpL = str(modulePath).split('.')
+            mpL = str(modulePath).split(".")
             moduleName = mpL[-1]
             #
             aObj = getattr(aMod, moduleName)(**kwargs)
         except Exception as e:
-            logger.error("Failing to instance helper %r with %s" % (modulePath, str(e)))
+            logger.error("Failing to instance helper %r with %s", modulePath, str(e))
         return aObj
 
     def __readIniFile(self, configPath, useEnv=False, **kwargs):
@@ -353,9 +353,10 @@ class ConfigUtil(object):
             object: On success a ConfigParser dictionary-like object
 
         """
+        _ = kwargs
         if useEnv:
             # Note that environmetal variables are still lowercased.
-            logger.debug("Using enviroment length %d" % len(os.environ))
+            logger.debug("Using enviroment length %d", len(os.environ))
             configP = cp(os.environ, default_section=self.__defaultSectionName)
         else:
             configP = cp(default_section=self.__defaultSectionName)
@@ -367,7 +368,7 @@ class ConfigUtil(object):
             configP.read(configPath)
             return configP
         except Exception as e:
-            logger.error("Failed reading INI configuration file %s with %s" % (configPath, str(e)))
+            logger.error("Failed reading INI configuration file %s with %s", configPath, str(e))
         return configP
 
     def __readYamlFile(self, configPath, **kwargs):
@@ -381,16 +382,17 @@ class ConfigUtil(object):
             object: On success a ConfigParser dictionary-like object or an empty dictionary on Failure
 
         """
+        _ = kwargs
         yaml = ruamel.yaml.YAML()
         yaml.preserve_quotes = True
         yaml.indent(mapping=4, sequence=6, offset=4)
         yaml.explicit_start = True
         rD = {}
         try:
-            with open(configPath, 'r') as stream:
+            with open(configPath, "r") as stream:
                 rD = yaml.load(stream)
         except Exception as e:
-            logger.error("Failed reading YAML configuration file %s with %s" % (configPath, str(e)))
+            logger.error("Failed reading YAML configuration file %s with %s", configPath, str(e))
         return rD
 
     def __writeIniFile(self, configPath, configObj, **kwargs):
@@ -404,12 +406,13 @@ class ConfigUtil(object):
             bool: True for success or False otherwise
 
         """
+        _ = kwargs
         try:
-            with open(configPath, 'w') as ofh:
+            with open(configPath, "w") as ofh:
                 configObj.write(ofh, space_around_delimiters=False)
             return True
         except Exception as e:
-            logger.error("Failed writing INI configuration file %s with %s" % (configPath, str(e)))
+            logger.error("Failed writing INI configuration file %s with %s", configPath, str(e))
         return False
 
     def __writeYamlFile(self, configPath, mObj, **kwargs):
@@ -429,11 +432,11 @@ class ConfigUtil(object):
         yaml.explicit_start = True
         try:
             #
-            with open(configPath, 'w') as ofh:
+            with open(configPath, "w") as ofh:
                 yaml.dump(mObj, ofh)
             return True
         except Exception as e:
-            logger.error("Failed writing YAML configuration file %s with %s" % (configPath, str(e)))
+            logger.error("Failed writing YAML configuration file %s with %s", configPath, str(e))
         return False
 
     def __extractDict(self, configObj):
@@ -449,7 +452,7 @@ class ConfigUtil(object):
         sectDict[self.__defaultSectionName] = tD
 
         sections = configObj.sections()
-        logger.debug("Sections %r" % sections)
+        logger.debug("Sections %r", sections)
 
         for section in sections:
             options = configObj.options(section)
@@ -458,10 +461,10 @@ class ConfigUtil(object):
                 tD[option] = configObj.get(section, option)
 
             sectDict[section] = tD
-        logger.debug("Returning dictionary %r" % sectDict.items())
+        logger.debug("Returning dictionary %r", sectDict.items())
         return sectDict
 
-    def __createConfigParseObj(self, dObj, delimiter=','):
+    def __createConfigParseObj(self, dObj, delimiter=","):
         """ Internal method to create a configparser object from a dictionary representation
         of configuration sections and objects.
 
@@ -483,7 +486,7 @@ class ConfigUtil(object):
                     else:
                         cpObj.set(sK, oK, oV)
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
 
         return cpObj
 
@@ -491,7 +494,7 @@ class ConfigUtil(object):
         """  Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested).
         """
         try:
-            kys = keyName.split('.')
+            kys = keyName.split(".")
             for key in kys:
                 try:
                     dct = dct[key]
@@ -499,12 +502,12 @@ class ConfigUtil(object):
                     return None
             return dct
         except Exception as e:
-            logger.exception("Failing for key %r with %s" % (keyName, str(e)))
+            logger.exception("Failing for key %r with %s", keyName, str(e))
 
         return None
 
     def dump(self):
         for section in self.__cD:
-            logger.info("Configuration section: %s" % section)
+            logger.info("Configuration section: %s", section)
             for opt in self.__cD[section]:
-                logger.info(" ++++  option %s  : %r " % (opt, self.__cD[section][opt]))
+                logger.info(" ++++  option %s  : %r ", opt, self.__cD[section][opt])
