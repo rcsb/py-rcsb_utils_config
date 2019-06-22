@@ -10,5 +10,6 @@
  4-Jan-2019  - V0.16 Add optional arguments to getPath(...,prefixName=None, prefixSectionName=None)
                      Add methods getDefaultSectionName(), replaceSectionName(), and getSectionNameReplacement()
 10-Mar-2019  - V0.17 Add getEnvValue() method to dereference an option as an environmental variable
+21-Jun-2019  - V0.18 Change development workflow
 
 
