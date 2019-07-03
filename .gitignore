@@ -1,4 +1,5 @@
 test-output/
+!test-output/.gitkeep
 .tox/
 LOGTOX
 # Byte-compiled / optimized / DLL files
