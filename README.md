@@ -1,6 +1,8 @@
-## RCSB Python Configuration Utilities
+# RCSB Python Configuration Utilities
 
-### Introduction
+[![Build Status](https://dev.azure.com/jdwestbrook/jdwestbrook/_apis/build/status/rcsb.py-rcsb_utils_multiproc?branchName=master)](https://dev.azure.com/jdwestbrook/jdwestbrook/_build/latest?definitionId=6&branchName=master)
+
+## Introduction
 
 This module contains a utilities for managing configuration options
 using ini/configparser and YAML format configuration files.
@@ -30,6 +32,9 @@ tox
 Installation is via the program [pip](https://pypi.python.org/pypi/pip).
 
 ```bash
+pip install rcsb.utils.config
+
+or for the local repository:
+
 pip install .
 ```
-
