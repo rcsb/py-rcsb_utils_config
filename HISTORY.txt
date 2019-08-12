@@ -11,6 +11,8 @@
                      Add methods getDefaultSectionName(), replaceSectionName(), and getSectionNameReplacement()
 10-Mar-2019  - V0.17 Add getEnvValue() method to dereference an option as an environmental variable
 21-Jun-2019  - V0.18 Change development workflow
-12-Aug-2019  - V0.19 Add support for configuration secrets
+11-Aug-2019  - V0.19 Add support for configuration secrets
+12-Aug-2019  - V0.20 Revise naming API, update documentation and dependencies
+
 
 
