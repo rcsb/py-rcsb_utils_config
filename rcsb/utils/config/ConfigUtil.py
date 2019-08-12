@@ -30,12 +30,15 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
+import base64
 import copy
 import logging
 import os
 import sys
 
 import ruamel.yaml
+from nacl.encoding import HexEncoder
+from nacl.secret import SecretBox
 
 try:
     from configparser import ConfigParser as cp
@@ -124,7 +127,7 @@ class ConfigUtil(object):
             dObj (object): Dictionary-like configuration object
 
         Returns:
-            bool: True for sucess or False otherwise
+            bool: True for success or False otherwise
 
         """
         try:
@@ -270,11 +273,35 @@ class ConfigUtil(object):
         #
         return val
 
-    def getEnvValue(self, name, default=None, sectionName=None):
-        """ Return the value of input configuration option (environmental variable name).
+    def getDecrypted(self, name, default=None, sectionName=None, tokenName="CONFIG_SUPPORT_TOKEN"):
+        """ Return a decrypted value associated with the input configuration option.
 
         Args:
-            name (str): configuration option name (environmental variable)
+            name (str): configuration option name
+            default (str, optional): default value returned if no configuration option is provided
+            sectionName (str, optional): configuration section name, a simple key
+
+        Returns:
+            str: option value
+
+        """
+        val = default
+        try:
+            val = self.get(name, default=default, sectionName=sectionName)
+            hexKey = self.getEnvValue(tokenName, sectionName=sectionName)
+            if val and hexKey:
+                val = self.__decryptMessage(val, hexKey)
+            hexKey = None
+        except Exception as e:
+            logger.debug("Missing config option %r (%r) assigned default value %r (%s)", name, sectionName, default, str(e))
+        #
+        return val
+
+    def getEnvValue(self, name, default=None, sectionName=None):
+        """ Return the value of the environmental variable named as the configuration option value.
+
+        Args:
+            name (str): configuration option name (value is environmental variable name)
             default (str, optional): default value returned if no configuration option is provided
             sectionName (str, optional): configuration section name, a simple key
 
@@ -511,3 +538,25 @@ class ConfigUtil(object):
             logger.info("Configuration section: %s", section)
             for opt in self.__cD[section]:
                 logger.info(" ++++  option %s  : %r ", opt, self.__cD[section][opt])
+
+    def __decryptMessage(self, msg, hexKey):
+        """Decrypt the input message.
+
+        Args:
+            msg (str): input message
+            hexKey (str): encryption key
+
+        Returns:
+            (str):  decrypted message text
+        """
+        txt = None
+        try:
+            box = SecretBox(hexKey, encoder=HexEncoder)
+            bMsg = base64.b64decode(msg)
+            dcrMsg = box.decrypt(bMsg)
+            logger.debug("type %r text %r", type(dcrMsg), dcrMsg)
+            txt = dcrMsg.decode("utf-8")
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+
+        return txt

@@ -26,6 +26,9 @@ from collections import OrderedDict
 
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
+HERE = os.path.abspath(os.path.dirname(__file__))
+TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -35,16 +38,21 @@ class ConfigUtilTests(unittest.TestCase):
     def setUp(self):
         self.__verbose = True
         #
-        self.__mockTopPath = os.path.abspath(os.path.dirname(__file__))
-        self.__inpPathConfigIni = os.path.join(self.__mockTopPath, "setup-example.cfg")
-        self.__inpPathConfigWithEnvIni = os.path.join(self.__mockTopPath, "setup-example-with-env.cfg")
-        self.__inpPathConfigYaml = os.path.join(self.__mockTopPath, "setup-example.yml")
-        self.__outPathConfigIni = os.path.join(self.__mockTopPath, "test-output", "out-setup-example.cfg")
-        self.__outPathConfigWithEnvIni = os.path.join(self.__mockTopPath, "test-output", "out-setup-example-with-env.cfg")
-        self.__outPathConfigYaml = os.path.join(self.__mockTopPath, "test-output", "out-setup-example.yml")
-        self.__outPathConfigYamlExport = os.path.join(self.__mockTopPath, "test-output", "out-export-example.yml")
+        # self.__mockTopPath = os.path.abspath(os.path.dirname(__file__))
+        self.__workPath = os.path.join(HERE, "test-output")
+        self.__dataPath = os.path.join(HERE, "test-data")
+        self.__mockTopPath = self.__dataPath
         #
-        self.__cfgOb = ConfigUtil(configPath=self.__inpPathConfigIni, mockTopPath=self.__mockTopPath)
+        self.__inpPathConfigIni = os.path.join(self.__dataPath, "setup-example.cfg")
+        self.__inpPathConfigWithEnvIni = os.path.join(self.__dataPath, "setup-example-with-env.cfg")
+        self.__inpPathConfigYaml = os.path.join(self.__dataPath, "setup-example.yml")
+        #
+        self.__outPathConfigIni = os.path.join(self.__workPath, "out-setup-example.cfg")
+        self.__outPathConfigWithEnvIni = os.path.join(self.__workPath, "out-setup-example-with-env.cfg")
+        self.__outPathConfigYaml = os.path.join(self.__workPath, "out-setup-example.yml")
+        self.__outPathConfigYamlExport = os.path.join(self.__workPath, "out-export-example.yml")
+        #
+
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -84,21 +92,22 @@ class ConfigUtilTests(unittest.TestCase):
 
     def testReadIniConfig(self):
         try:
+            cfgOb = ConfigUtil(configPath=self.__inpPathConfigIni, mockTopPath=self.__dataPath)
             sName = "DEFAULT"
-            pathBird = self.__cfgOb.getPath("BIRD_REPO_PATH", sectionName=sName)
-            pathPdbx = self.__cfgOb.getPath("PDBX_REPO_PATH", sectionName=sName)
+            pathBird = cfgOb.getPath("BIRD_REPO_PATH", sectionName=sName)
+            pathPdbx = cfgOb.getPath("PDBX_REPO_PATH", sectionName=sName)
             #
             self.assertEqual(pathBird, os.path.join(self.__mockTopPath, "MOCK_BIRD_REPO"))
             self.assertEqual(pathPdbx, os.path.join(self.__mockTopPath, "MOCK_PDBX_SANDBOX"))
 
-            pathBird = self.__cfgOb.get("BIRD_REPO_PATH", sectionName=sName)
-            pathPdbx = self.__cfgOb.get("PDBX_REPO_PATH", sectionName=sName)
+            pathBird = cfgOb.get("BIRD_REPO_PATH", sectionName=sName)
+            pathPdbx = cfgOb.get("PDBX_REPO_PATH", sectionName=sName)
 
             self.assertEqual(pathBird, "MOCK_BIRD_REPO")
             self.assertEqual(pathPdbx, "MOCK_PDBX_SANDBOX")
             sName = "Section1"
             #
-            helperMethod = self.__cfgOb.getHelper("DICT_METHOD_HELPER_MODULE", sectionName=sName)
+            helperMethod = cfgOb.getHelper("DICT_METHOD_HELPER_MODULE", sectionName=sName)
 
             tv = helperMethod.echo("test_value")
             self.assertEqual(tv, "test_value")
@@ -106,7 +115,7 @@ class ConfigUtilTests(unittest.TestCase):
             tEnv = "TEST_ENV_VAR"
             tVal = "TEST_ENV_VAR_VALUE"
             os.environ[tEnv] = tVal
-            eVal = self.__cfgOb.getEnvValue("ENV_OPTION_A", sectionName=sName)
+            eVal = cfgOb.getEnvValue("ENV_OPTION_A", sectionName=sName)
             self.assertEqual(tVal, eVal)
             #
         except Exception as e:
@@ -116,8 +125,9 @@ class ConfigUtilTests(unittest.TestCase):
 
     def testWriteFromIniConfig(self):
         try:
-            ok = self.__cfgOb.writeConfig(self.__outPathConfigIni, configFormat="ini")
-            ok = self.__cfgOb.writeConfig(self.__outPathConfigYaml, configFormat="yaml")
+            cfgOb = ConfigUtil(configPath=self.__inpPathConfigIni, mockTopPath=self.__dataPath)
+            ok = cfgOb.writeConfig(self.__outPathConfigIni, configFormat="ini")
+            ok = cfgOb.writeConfig(self.__outPathConfigYaml, configFormat="yaml")
             self.assertTrue(ok)
 
         except Exception as e:
@@ -152,6 +162,15 @@ class ConfigUtilTests(unittest.TestCase):
             os.environ[tEnv] = tVal
             eVal = cfgOb.getEnvValue("ENV_OPTION_A", sectionName=sName)
             self.assertEqual(tVal, eVal)
+
+            ky = "42d13dfc9eb689e48c774aa5af8a7e15dbabcd5041939bef213eb37aed882fd6"
+            os.environ["CONFIG_SUPPORT_TOKEN_ENV"] = ky
+            #
+            un = cfgOb.getDecrypted("SECRET_TEST_USERNAME", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            pw = cfgOb.getDecrypted("SECRET_TEST_PASSWORD", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            self.assertEqual(un, "testuser")
+            self.assertEqual(pw, "testuserpassword")
+            #
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))
