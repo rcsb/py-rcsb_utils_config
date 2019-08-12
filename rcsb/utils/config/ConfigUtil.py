@@ -273,8 +273,8 @@ class ConfigUtil(object):
         #
         return val
 
-    def getDecrypted(self, name, default=None, sectionName=None, tokenName="CONFIG_SUPPORT_TOKEN"):
-        """ Return a decrypted value associated with the input configuration option.
+    def getSecret(self, name, default=None, sectionName=None, tokenName="CONFIG_SUPPORT_TOKEN"):
+        """ Return a decrypted value associated with the input sensitive configuration option.
 
         Args:
             name (str): configuration option name

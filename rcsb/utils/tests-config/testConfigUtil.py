@@ -166,8 +166,8 @@ class ConfigUtilTests(unittest.TestCase):
             ky = "42d13dfc9eb689e48c774aa5af8a7e15dbabcd5041939bef213eb37aed882fd6"
             os.environ["CONFIG_SUPPORT_TOKEN_ENV"] = ky
             #
-            un = cfgOb.getDecrypted("SECRET_TEST_USERNAME", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
-            pw = cfgOb.getDecrypted("SECRET_TEST_PASSWORD", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            un = cfgOb.getSecret("SECRET_TEST_USERNAME", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            pw = cfgOb.getSecret("SECRET_TEST_PASSWORD", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
             self.assertEqual(un, "testuser")
             self.assertEqual(pw, "testuserpassword")
             #
