@@ -171,7 +171,15 @@ class ConfigUtilTests(unittest.TestCase):
             self.assertEqual(un, "testuser")
             self.assertEqual(pw, "testuserpassword")
             #
-
+            un = cfgOb.get("_TEST_USERNAME", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            pw = cfgOb.get("_TEST_PASSWORD", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            self.assertEqual(un, "testuser")
+            self.assertEqual(pw, "testuserpassword")
+            #
+            un = cfgOb.getSecret("_TEST_USERNAME", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            pw = cfgOb.getSecret("_TEST_PASSWORD", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            self.assertEqual(un, "testuser")
+            self.assertEqual(pw, "testuserpassword")
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()

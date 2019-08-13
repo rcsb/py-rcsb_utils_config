@@ -214,14 +214,16 @@ class ConfigUtil(object):
             ok = False
         return ok
 
-    def get(self, name, default=None, sectionName=None):
-        """Return configuration value of input configuration option.
+    def get(self, name, default=None, sectionName=None, tokenName="CONFIG_SUPPORT_TOKEN"):
+        """Return configuration value of input configuration option. Option names beginning with
+           leading underscore are treated as encrypted secrets.
 
         Args:
             name (str): configuration option name
             default (str, optional): default value returned if no configuration option is provided
             sectionName (str, optional): configuration section name, a simple key (default = defaultSectionName from object)
-
+            tokenName (str,optional): configuration option holding name of environmental variable
+                                        storing security key.
         Returns:
             str: configuration option value
 
@@ -237,6 +239,8 @@ class ConfigUtil(object):
                 val = self.__cD[mySection][name]
             #
             val = str(val) if self.__configFormat == "ini" else val
+            if name.startswith("_") and isinstance(val, str):
+                val = self.__getSecretValue(name, val, mySection, tokenName)
         except Exception as e:
             if logMissing:
                 logger.debug("Missing config option %r (%r) assigned default value %r (%s)", name, mySection, default, str(e))
@@ -273,6 +277,16 @@ class ConfigUtil(object):
         #
         return val
 
+    def __getSecretValue(self, name, val, sectionName, tokenName):
+        try:
+            hexKey = self.getEnvValue(tokenName, sectionName=sectionName)
+            if val and hexKey:
+                val = self.__decryptMessage(val, hexKey)
+            hexKey = None
+        except Exception as e:
+            logger.error("Failing processing %s secret value with %s", name, str(e))
+        return val
+
     def getSecret(self, name, default=None, sectionName=None, tokenName="CONFIG_SUPPORT_TOKEN"):
         """ Return a decrypted value associated with the input sensitive configuration option.
 
@@ -280,20 +294,17 @@ class ConfigUtil(object):
             name (str): configuration option name
             default (str, optional): default value returned if no configuration option is provided
             sectionName (str, optional): configuration section name, a simple key
+            tokenName (str,optional): configuration option holding name of environmental variable
+                                      storing security key.
 
         Returns:
             str: option value
 
         """
         val = default
-        try:
-            val = self.get(name, default=default, sectionName=sectionName)
-            hexKey = self.getEnvValue(tokenName, sectionName=sectionName)
-            if val and hexKey:
-                val = self.__decryptMessage(val, hexKey)
-            hexKey = None
-        except Exception as e:
-            logger.debug("Missing config option %r (%r) assigned default value %r (%s)", name, sectionName, default, str(e))
+        val = self.get(name, default=default, sectionName=sectionName)
+        if not name.startswith("_") and val and isinstance(val, str):
+            val = self.__getSecretValue(name, val, sectionName, tokenName)
         #
         return val
 
