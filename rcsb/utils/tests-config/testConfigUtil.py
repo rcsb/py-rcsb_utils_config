@@ -46,13 +46,13 @@ class ConfigUtilTests(unittest.TestCase):
         self.__inpPathConfigIni = os.path.join(self.__dataPath, "setup-example.cfg")
         self.__inpPathConfigWithEnvIni = os.path.join(self.__dataPath, "setup-example-with-env.cfg")
         self.__inpPathConfigYaml = os.path.join(self.__dataPath, "setup-example.yml")
+        self.__inpPathConfigAppendYaml = os.path.join(self.__dataPath, "setup-example-append.yml")
         #
         self.__outPathConfigIni = os.path.join(self.__workPath, "out-setup-example.cfg")
         self.__outPathConfigWithEnvIni = os.path.join(self.__workPath, "out-setup-example-with-env.cfg")
         self.__outPathConfigYaml = os.path.join(self.__workPath, "out-setup-example.yml")
         self.__outPathConfigYamlExport = os.path.join(self.__workPath, "out-export-example.yml")
         #
-
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -138,6 +138,9 @@ class ConfigUtilTests(unittest.TestCase):
     def testReadYamlConfig(self):
         try:
             cfgOb = ConfigUtil(configPath=self.__inpPathConfigYaml, configFormat="yaml", mockTopPath=self.__mockTopPath)
+            ok = cfgOb.appendConfig(self.__inpPathConfigAppendYaml, configFormat="yaml")
+            self.assertTrue(ok)
+            #
             sName = "DEFAULT"
             pathBird = cfgOb.getPath("BIRD_REPO_PATH", sectionName=sName)
             pathPdbx = cfgOb.getPath("PDBX_REPO_PATH", sectionName=sName)
@@ -180,6 +183,13 @@ class ConfigUtilTests(unittest.TestCase):
             pw = cfgOb.getSecret("_TEST_PASSWORD", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
             self.assertEqual(un, "testuser")
             self.assertEqual(pw, "testuserpassword")
+            #
+            sName = "Section2"
+            un = cfgOb.getSecret("_TEST_USERNAME", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            pw = cfgOb.getSecret("_TEST_PASSWORD", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            self.assertEqual(un, "testuser")
+            self.assertEqual(pw, "testuserpassword")
+
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
@@ -188,6 +198,8 @@ class ConfigUtilTests(unittest.TestCase):
     def testWriteFromYamlConfig(self):
         try:
             cfgOb = ConfigUtil(configPath=self.__inpPathConfigYaml, configFormat="yaml", mockTopPath=self.__mockTopPath)
+            ok = cfgOb.appendConfig(self.__inpPathConfigAppendYaml, configFormat="yaml")
+            self.assertTrue(ok)
             ok = cfgOb.writeConfig(self.__outPathConfigIni, configFormat="ini")
             self.assertTrue(ok)
             ok = cfgOb.writeConfig(self.__outPathConfigYaml, configFormat="yaml")

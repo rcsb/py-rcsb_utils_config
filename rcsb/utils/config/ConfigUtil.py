@@ -78,17 +78,7 @@ class ConfigUtil(object):
         #
         self.__sectionNameD = {"DEFAULT": defaultSectionName}
         #
-        self.__configFormat = configFormat
-        if not self.__configFormat:
-            # Perceive the format from the file path or set default to 'ini'
-            if self.__myConfigPath:
-                _, ext = os.path.splitext(self.__myConfigPath)
-                if ext[1:].lower() in ["yaml", "yml"]:
-                    self.__configFormat = "yaml"
-                else:
-                    self.__configFormat = "ini"
-            else:
-                self.__configFormat = "ini"
+        self.__configFormat = configFormat if configFormat else self.__getConfigFormat(self.__myConfigPath, defaultConfig="ini")
         #
         logger.debug("Using config path %s format %s", self.__myConfigPath, self.__configFormat)
         if self.__myConfigPath:
@@ -155,12 +145,41 @@ class ConfigUtil(object):
             logger.exception("Failing with %s", str(e))
         return None
 
-    def __updateConfig(self, filePath, configFormat=None, **kwargs):
+    def appendConfig(self, filePath, configFormat=None, **kwargs):
+        ok = False
+        try:
+            cf = configFormat if configFormat else self.__getConfigFormat(filePath, defaultConfig=self.__configFormat)
+            tf, cD = self.__updateConfig(filePath, cf, **kwargs)
+            if tf == cf:
+                self.__cD.update(cD)
+                ok = True
+            else:
+                logger.error("Configuration format inconstency %r .ne. %r", cf, tf)
+        except Exception as e:
+            logger.error("Appending %r (%r) failing with %s", filePath, cf, str(e))
+        return ok
+
+    def __getConfigFormat(self, filePath, defaultConfig="ini"):
+        configFormat = defaultConfig
+        try:
+            # Perceive the format from the file path or set default to 'ini'
+            if filePath:
+                _, ext = os.path.splitext(filePath)
+                if ext[1:].lower() in ["yaml", "yml"]:
+                    configFormat = "yaml"
+                elif ext[1:].lower() in ["ini"]:
+                    configFormat = "ini"
+        except Exception as e:
+            logger.debug("Failing with %s", e)
+
+        return configFormat
+
+    def __updateConfig(self, filePath, configFormat, **kwargs):
         """Update the current configuration options with data from the input configuration file.
 
         Args:
             filePath (str): Configuration file path
-            configFormat (str, optional): Configuration file format (e.g. ini or yaml)
+            configFormat (str): Configuration file format (e.g. ini or yaml)
             **kwargs: key value arguments pass to import methods
 
             rountTrip (bool): parse yaml to preserve context for roundtrip processing
@@ -173,7 +192,7 @@ class ConfigUtil(object):
         #
         cD = None
         try:
-            cf = configFormat if configFormat else self.__configFormat
+            cf = configFormat
             if cf.lower() in ["ini", "configparser"]:
                 useEnv = kwargs.get("importEnvironment", False)
                 cD = self.__readIniFile(filePath, useEnv=useEnv, **kwargs)
@@ -265,6 +284,11 @@ class ConfigUtil(object):
         val = default
         try:
             val = self.get(name, default=default, sectionName=sectionName)
+            # don't prefix a fully qualified path or url
+            for st in ["/", "http://", "https://", "ftp://", "file://"]:
+                if val.startswith(st):
+                    return val
+            #
             myPrefixSectionName = prefixSectionName if prefixSectionName else self.__defaultSectionName
             prefixPath = self.get(prefixName, default=None, sectionName=myPrefixSectionName) if prefixName else None
 
