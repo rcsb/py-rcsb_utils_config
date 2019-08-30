@@ -15,3 +15,4 @@
 12-Aug-2019  - V0.20 Revise naming API, update documentation and dependencies
 13-Aug-2019  - V0.21 Recognize options with leading underscores as secrets.
 20-Aug-2019  - V0.22 Add append config method, check for protocol scheme and leading / before preppending path details.
+29-Aug-2019  - V0.23 Update dependency to fix py27 issue
