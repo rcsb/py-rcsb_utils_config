@@ -198,7 +198,7 @@ class ConfigUtil(object):
                 cD = self.__readIniFile(filePath, useEnv=useEnv, **kwargs)
                 configFormat = "ini"
             elif cf.lower() in ["yaml"]:
-                rt = kwargs.get("roundTrip", True)
+                rt = kwargs.get("roundTrip", False)
                 cD = self.__readYamlFile(filePath, roundTrip=rt)
                 configFormat = "yaml"
         except Exception as e:

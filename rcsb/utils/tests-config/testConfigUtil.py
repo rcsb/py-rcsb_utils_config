@@ -197,7 +197,7 @@ class ConfigUtilTests(unittest.TestCase):
 
     def testWriteFromYamlConfig(self):
         try:
-            cfgOb = ConfigUtil(configPath=self.__inpPathConfigYaml, configFormat="yaml", mockTopPath=self.__mockTopPath)
+            cfgOb = ConfigUtil(configPath=self.__inpPathConfigYaml, configFormat="yaml", mockTopPath=self.__mockTopPath, roundTrip=True)
             ok = cfgOb.appendConfig(self.__inpPathConfigAppendYaml, configFormat="yaml")
             self.assertTrue(ok)
             ok = cfgOb.writeConfig(self.__outPathConfigIni, configFormat="ini")
@@ -212,7 +212,7 @@ class ConfigUtilTests(unittest.TestCase):
 
     def testRoundTripYaml(self):
         try:
-            cfgOb = ConfigUtil(configPath=self.__inpPathConfigYaml, configFormat="yaml", mockTopPath=self.__mockTopPath)
+            cfgOb = ConfigUtil(configPath=self.__inpPathConfigYaml, configFormat="yaml", mockTopPath=self.__mockTopPath, roundTrip=True)
             ok = cfgOb.writeConfig(self.__outPathConfigIni, configFormat="ini")
             self.assertTrue(ok)
             ok = cfgOb.writeConfig(self.__outPathConfigYaml, configFormat="yaml")
@@ -235,7 +235,7 @@ class ConfigUtilTests(unittest.TestCase):
         return rD
 
     def testExportToYaml(self):
-        cfgOb = ConfigUtil(configFormat="yaml", mockTopPath=self.__mockTopPath)
+        cfgOb = ConfigUtil(configFormat="yaml", mockTopPath=self.__mockTopPath, roundTrip=True)
         #
         cD = self.__createDataSet()
         cfgOb.importConfig(cD)
