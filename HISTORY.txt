@@ -18,3 +18,4 @@
 29-Aug-2019  - V0.23 Update dependency to fix py27 issue
 30-Aug-2019  - V0.24 Make the default for yaml roundrip False
 23-Nov-2019  - V0.25 Update pipeline to py38
+14-Dec-2019  - V0.26 Report missing environmental variable lookups as errors.

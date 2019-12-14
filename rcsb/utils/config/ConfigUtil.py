@@ -304,8 +304,7 @@ class ConfigUtil(object):
     def __getSecretValue(self, name, val, sectionName, tokenName):
         try:
             hexKey = self.getEnvValue(tokenName, sectionName=sectionName)
-            if val and hexKey:
-                val = self.__decryptMessage(val, hexKey)
+            val = self.__decryptMessage(val, hexKey)
             hexKey = None
         except Exception as e:
             logger.error("Failing processing %s secret value with %s", name, str(e))
@@ -349,7 +348,7 @@ class ConfigUtil(object):
             varName = self.get(name, default=None, sectionName=sectionName)
             val = os.environ.get(varName, default)
         except Exception as e:
-            logger.debug("Failed processing environmental variable config option %r (%r) assigned default value %r (%s)", name, sectionName, default, str(e))
+            logger.error("Failed processing environmental variable config option %r (%r) assigned default value %r (%s)", name, sectionName, default, str(e))
         #
         return val
 
