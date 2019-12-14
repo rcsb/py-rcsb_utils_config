@@ -306,12 +306,12 @@ class ConfigUtil(object):
             hexKey = self.getEnvValue(tokenName, sectionName=sectionName)
             if not hexKey:
                 logger.error("Empty key for token %r processing %r and %r", tokenName, name, val)
-            else:
+            elif len(hexKey) < 32:
                 logger.error("Bad key (%d) for token %r processing %r and %r", len(hexKey), tokenName, name, val)
             val = self.__decryptMessage(val, hexKey)
             hexKey = None
         except Exception as e:
-            logger.error("Failing processing %s using %r secret value with %s", name, tokenName, str(e))
+            logger.debug("Failing processing %s using %r secret value with %s", name, tokenName, str(e))
         return val
 
     def getSecret(self, name, default=None, sectionName=None, tokenName="CONFIG_SUPPORT_TOKEN"):

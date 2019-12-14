@@ -20,3 +20,4 @@
 23-Nov-2019  - V0.25 Update pipeline to py38
 14-Dec-2019  - V0.26 Report missing environmental variable lookups as errors.
 14-Dec-2019  - V0.27 Improve error reporting for key processing
+14-Dec-2019  - V0.28 Further simplify error reporting for missing or bad security key
