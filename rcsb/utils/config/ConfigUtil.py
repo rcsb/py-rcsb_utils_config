@@ -595,6 +595,6 @@ class ConfigUtil(object):
             logger.debug("type %r text %r", type(dcrMsg), dcrMsg)
             txt = dcrMsg.decode("utf-8")
         except Exception as e:
-            logger.exception("Failing with %s", str(e))
+            logger.debug("Failing with %s", str(e))
 
         return txt
