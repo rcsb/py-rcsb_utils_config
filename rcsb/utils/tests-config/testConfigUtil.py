@@ -189,7 +189,13 @@ class ConfigUtilTests(unittest.TestCase):
             pw = cfgOb.getSecret("_TEST_PASSWORD", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
             self.assertEqual(un, "testuser")
             self.assertEqual(pw, "testuserpassword")
-
+            # test fallback
+            # CLEAR_TEXT_USERNAME: testuser2
+            # CLEAR_TEXT_PASSWORD: changeme2
+            un = cfgOb.get("_CLEAR_TEXT_USERNAME", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            pw = cfgOb.get("_CLEAR_TEXT_PASSWORD", default=None, sectionName=sName, tokenName="CONFIG_SUPPORT_TOKEN")
+            self.assertEqual(un, "testuser2")
+            self.assertEqual(pw, "changeme2")
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()

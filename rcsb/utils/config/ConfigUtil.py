@@ -235,6 +235,43 @@ class ConfigUtil(object):
 
     def get(self, name, default=None, sectionName=None, tokenName="CONFIG_SUPPORT_TOKEN"):
         """Return configuration value of input configuration option. Option names beginning with
+           leading underscore are treated as encrypted secrets. If an encrypted option is
+           not found in the section this method will fallback to the value of the unqualified
+           option.
+
+        Args:
+            name (str): configuration option name
+            default (str, optional): default value returned if no configuration option is provided
+            sectionName (str, optional): configuration section name, a simple key (default = defaultSectionName from object)
+            tokenName (str,optional): configuration option holding name of environmental variable
+                                        storing security key.
+        Returns:
+            str: configuration option value
+
+        """
+        logMissing = False
+        ok = False
+        mySection = sectionName if sectionName else self.__defaultSectionName
+        mySection = self.getSectionNameReplacement(mySection)
+        try:
+            if "." in name:
+                ok = self.__getKeyExists(self.__cD[mySection], name)
+            else:
+                ok = name in self.__cD[mySection]
+        except Exception:
+            ok = False
+        #
+        if ok:
+            return self.__get(name, default=default, sectionName=sectionName, tokenName=tokenName)
+        elif name.startswith("_"):
+            return self.__get(name[1:], default=default, sectionName=sectionName, tokenName=tokenName)
+        else:
+            if logMissing:
+                logger.debug("Missing config option %r (%r) assigned default value %r", name, mySection, default)
+            return default
+
+    def __get(self, name, default=None, sectionName=None, tokenName="CONFIG_SUPPORT_TOKEN"):
+        """Return configuration value of input configuration option. Option names beginning with
            leading underscore are treated as encrypted secrets.
 
         Args:
@@ -260,6 +297,7 @@ class ConfigUtil(object):
             val = str(val) if self.__configFormat == "ini" else val
             if name.startswith("_") and isinstance(val, str):
                 val = self.__getSecretValue(name, val, mySection, tokenName)
+
         except Exception as e:
             if logMissing:
                 logger.debug("Missing config option %r (%r) assigned default value %r (%s)", name, mySection, default, str(e))
@@ -570,6 +608,21 @@ class ConfigUtil(object):
             logger.exception("Failing for key %r with %s", keyName, str(e))
 
         return None
+
+    def __getKeyExists(self, dct, keyName):
+        """  Return the key expressed in dot notation is in the input dictionary object (nested).
+        """
+        try:
+            kys = keyName.split(".")
+            for key in kys:
+                try:
+                    dct = dct[key]
+                except KeyError:
+                    return False
+            return True
+        except Exception as e:
+            logger.exception("Failing for key %r with %s", keyName, str(e))
+        return False
 
     def dump(self):
         for section in self.__cD:
