@@ -44,7 +44,7 @@ setup(
     ),
     entry_points={},
     #
-    install_requires=["future", 'configparser; python_version < "3.0"', "PyNaCl >= 1.3.0", "ruamel.yaml"],
+    install_requires=["future", 'configparser; python_version < "3.0"', "PyNaCl >= 1.3.0", "ruamel.yaml", "rcsb.utils.io >= 0.52"],
     packages=find_packages(exclude=["rcsb.utils.tests-config", "rcsb.utils.tests-*", "tests.*"]),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
