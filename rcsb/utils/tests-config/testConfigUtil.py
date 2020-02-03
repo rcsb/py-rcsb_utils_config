@@ -139,12 +139,7 @@ class ConfigUtilTests(unittest.TestCase):
     def testReadYamlConfigWithAutoAppend(self):
         try:
             cfgOb = ConfigUtil(
-                configPath=self.__inpPathConfigAutoYaml,
-                configFormat="yaml",
-                mockTopPath=self.__mockTopPath,
-                defaultSectionName="site_info_1",
-                cachePath=self.__workPath,
-                useCache=False,
+                configPath=self.__inpPathConfigAutoYaml, configFormat="yaml", mockTopPath=self.__mockTopPath, defaultSectionName="site_info_1", cachePath=None, useCache=False,
             )
             ok = cfgOb.appendConfig(self.__inpPathConfigAppendYaml, configFormat="yaml")
             self.assertTrue(ok)
@@ -158,12 +153,7 @@ class ConfigUtilTests(unittest.TestCase):
                 #
             #
             cfgOb = ConfigUtil(
-                configPath=self.__inpPathConfigAutoYaml,
-                configFormat="yaml",
-                mockTopPath=self.__mockTopPath,
-                defaultSectionName="site_info_1",
-                cachePath=self.__workPath,
-                useCache=True,
+                configPath=self.__inpPathConfigAutoYaml, configFormat="yaml", mockTopPath=self.__mockTopPath, defaultSectionName="site_info_1", cachePath=None, useCache=True,
             )
             ok = cfgOb.appendConfig(self.__inpPathConfigAppendYaml, configFormat="yaml")
             self.assertTrue(ok)

@@ -36,6 +36,7 @@ import copy
 import logging
 import os
 import sys
+import tempfile
 
 import ruamel.yaml
 from nacl.encoding import HexEncoder
@@ -89,8 +90,8 @@ class ConfigUtil(object):
         #  Mockpath is prepended to path configuration options if it specified
         self.__mockTopPath = mockTopPath
         #
-        # Top cache path for remote configuration assets
-        cachePath = cachePath if cachePath else "."
+        # Top cache path for remote configuration assets - if no cache information is provided then use system temp area.
+        cachePath = cachePath if cachePath else tempfile.mkdtemp(prefix="config-util", suffix="-cache")
         appendConfigOption = appendConfigOption if appendConfigOption else None
         #
         # This is the internal container for configuration data from all sources
