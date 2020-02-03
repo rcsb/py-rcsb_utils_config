@@ -19,6 +19,7 @@
 #    4-Jan-2019  jdw add optional arguments to getPath(...,prefixName=None, prefixSectionName=None)
 #                    add methods getDefaultSectionName(), replaceSectionName(), and getSectionNameReplacement()
 #   10-Mar-2019  jdw add method getEnvValue() to dereference config option as an environmental variable
+#    3-Feb-2020  jdw add __processAppendedSections() to handle nested configuration sections
 ##
 """
  Manage simple configuration options.
@@ -40,6 +41,8 @@ import ruamel.yaml
 from nacl.encoding import HexEncoder
 from nacl.secret import SecretBox
 
+from rcsb.utils.io.FileUtil import FileUtil
+
 try:
     from configparser import ConfigParser as cp
 except ImportError:
@@ -50,7 +53,18 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigUtil(object):
-    def __init__(self, configPath=None, defaultSectionName="DEFAULT", fallbackEnvPath=None, mockTopPath=None, configFormat=None, **kwargs):
+    def __init__(
+        self,
+        configPath=None,
+        defaultSectionName="DEFAULT",
+        fallbackEnvPath=None,
+        mockTopPath=None,
+        configFormat=None,
+        cachePath=".",
+        useCache=True,
+        appendConfigOption="CONFIG_APPEND_LOCATOR_PATHS",
+        **kwargs
+    ):
         """Manage simple configuration options stored in INI (Python configparser-style) or YAML configuration files.
 
 
@@ -60,6 +74,9 @@ class ConfigUtil(object):
             fallbackEnvPath (str, optional): Environmental variable holding configuration file path
             mockTopPath (str, optional): Mockpath is prepended to path configuration options if it specified (default=None)
             configFormat (str, optional): Configuration file format (e.g. ini or yaml default=ini)
+            cachePath (str,optional): top cache path for remote configuration assets
+            useCache (bool, optional): use cached configuration assets
+            appendConfigOption (str, optional): option name containing a list of appendable configuration files (yaml only)
             **kwargs: importEnvironment(bool) imports environment as default values for ini/configparser format files
 
 
@@ -72,6 +89,10 @@ class ConfigUtil(object):
         #  Mockpath is prepended to path configuration options if it specified
         self.__mockTopPath = mockTopPath
         #
+        # Top cache path for remote configuration assets
+        cachePath = cachePath if cachePath else "."
+        appendConfigOption = appendConfigOption if appendConfigOption else None
+        #
         # This is the internal container for configuration data from all sources
         self.__cD = {}
         #
@@ -83,8 +104,47 @@ class ConfigUtil(object):
         logger.debug("Using config path %s format %s", self.__myConfigPath, self.__configFormat)
         if self.__myConfigPath:
             self.__configFormat, self.__cD = self.__updateConfig(self.__myConfigPath, self.__configFormat, **kwargs)
+            self.__processAppendedSections(appendConfigOption, cachePath, useCache)
             if not self.__cD:
                 logger.warning("No configuration information imported - configuration path is %s (%s)", self.__myConfigPath, configFormat)
+
+    def __processAppendedSections(self, appendConfigOption, cachePath, useCache=True):
+        """Fetch and append configuration assets assigned to input configuration option.
+
+        Args:
+            appendConfigOption (str): reserved configuration option to hold a list of configuration asset locators
+            cachePath (str): path to store cached copies configuration assets
+            useCache (bool, optional): use existing cached configuration assets. Defaults to True.
+
+        Returns:
+            bool: True for success of False otherwise
+        """
+        try:
+            ret = True
+            appendLocL = self.getList(appendConfigOption, sectionName=self.__defaultSectionName)
+            logger.debug("appendLocL is %r", appendLocL)
+            if appendLocL:
+                cP = os.path.join(cachePath, "config")
+                fU = FileUtil(workPath=cP)
+                logger.debug("Fetching append sections from %r", appendLocL)
+                for appendLoc in appendLocL:
+                    fn = fU.getFileName(appendLoc)
+                    fp = os.path.join(cP, fn)
+                    okF = True
+                    if not (useCache and fU.exists(fp)):
+                        # get a fresh copy from source
+                        okF = fU.get(appendLoc, fp)
+                        logger.debug("Fetched %r to %r", appendLoc, fp)
+                    ok = self.appendConfig(fp)
+                    ret = ret and ok and okF
+        except Exception as e:
+            logger.exception("Failing for option %r cachePath %r with %s", appendConfigOption, cachePath, str(e))
+            ret = False
+        #
+        if not ret:
+            logger.error("Fetching appended sections failing %r", appendLocL)
+
+        return ret
 
     def getConfigPath(self):
         return self.__myConfigPath
@@ -398,10 +458,12 @@ class ConfigUtil(object):
         vL = default if default is not None else []
         try:
             val = self.get(name, default=default, sectionName=sectionName)
-            if isinstance(val, (list, set, tuple)):
-                vL = list(val)
-            else:
-                vL = str(val).split(delimiter)
+            logger.debug("name %r sectionName %r val %r", name, sectionName, val)
+            if val:
+                if isinstance(val, (list, set, tuple)):
+                    vL = list(val)
+                else:
+                    vL = str(val).split(delimiter)
         except Exception as e:
             logger.debug("Missing config option list %r (%r) assigned default value %r (%s)", name, sectionName, default, str(e))
         #

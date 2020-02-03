@@ -23,3 +23,4 @@
 14-Dec-2019  - V0.28 Further simplify error reporting for missing or bad security key
 14-Dec-2019  - V0.29 Quiet troubleshooting output
 31-Jan-2020  - V0.30 Add automatic fallback feature for underscore qualified options.
+ 3-Feb-2020  - V0.31 Add a reserved option to support one level of automatically incorporated configuration.

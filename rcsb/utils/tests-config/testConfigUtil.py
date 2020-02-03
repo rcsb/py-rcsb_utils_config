@@ -47,6 +47,7 @@ class ConfigUtilTests(unittest.TestCase):
         self.__inpPathConfigWithEnvIni = os.path.join(self.__dataPath, "setup-example-with-env.cfg")
         self.__inpPathConfigYaml = os.path.join(self.__dataPath, "setup-example.yml")
         self.__inpPathConfigAppendYaml = os.path.join(self.__dataPath, "setup-example-append.yml")
+        self.__inpPathConfigAutoYaml = os.path.join(self.__dataPath, "setup-example-auto-append.yml")
         #
         self.__outPathConfigIni = os.path.join(self.__workPath, "out-setup-example.cfg")
         self.__outPathConfigWithEnvIni = os.path.join(self.__workPath, "out-setup-example-with-env.cfg")
@@ -134,6 +135,49 @@ class ConfigUtilTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
         return {}
+
+    def testReadYamlConfigWithAutoAppend(self):
+        try:
+            cfgOb = ConfigUtil(
+                configPath=self.__inpPathConfigAutoYaml,
+                configFormat="yaml",
+                mockTopPath=self.__mockTopPath,
+                defaultSectionName="site_info_1",
+                cachePath=self.__workPath,
+                useCache=False,
+            )
+            ok = cfgOb.appendConfig(self.__inpPathConfigAppendYaml, configFormat="yaml")
+            self.assertTrue(ok)
+            #
+            for sName in ["section_appended_1", "section_appended_2", "Section1", "Section2"]:
+                pathBird = cfgOb.getPath("BIRD_REPO_PATH", sectionName=sName)
+                pathPdbx = cfgOb.getPath("PDBX_REPO_PATH", sectionName=sName)
+                #
+                self.assertEqual(pathBird, os.path.join(self.__mockTopPath, "MOCK_BIRD_REPO"))
+                self.assertEqual(pathPdbx, os.path.join(self.__mockTopPath, "MOCK_PDBX_SANDBOX"))
+                #
+            #
+            cfgOb = ConfigUtil(
+                configPath=self.__inpPathConfigAutoYaml,
+                configFormat="yaml",
+                mockTopPath=self.__mockTopPath,
+                defaultSectionName="site_info_1",
+                cachePath=self.__workPath,
+                useCache=True,
+            )
+            ok = cfgOb.appendConfig(self.__inpPathConfigAppendYaml, configFormat="yaml")
+            self.assertTrue(ok)
+            #
+            for sName in ["section_appended_1", "section_appended_2", "Section1", "Section2"]:
+                pathBird = cfgOb.getPath("BIRD_REPO_PATH", sectionName=sName)
+                pathPdbx = cfgOb.getPath("PDBX_REPO_PATH", sectionName=sName)
+                #
+                self.assertEqual(pathBird, os.path.join(self.__mockTopPath, "MOCK_BIRD_REPO"))
+                self.assertEqual(pathPdbx, os.path.join(self.__mockTopPath, "MOCK_PDBX_SANDBOX"))
+                #
+        except Exception as e:
+            logger.error("Failing with %s", str(e))
+            self.fail()
 
     def testReadYamlConfig(self):
         try:
