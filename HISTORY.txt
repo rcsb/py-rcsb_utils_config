@@ -25,3 +25,4 @@
 31-Jan-2020  - V0.30 Add automatic fallback feature for underscore qualified options.
  3-Feb-2020  - V0.31 Add a reserved option to support one level of automatically incorporated configuration.
  3-Feb-2020  - V0.32 Use a generic temporary directory of incorporated configs if cache is not explicitly pathed.
+ 3-Feb-2020  - V0.33 Change defaults for cache behavior.

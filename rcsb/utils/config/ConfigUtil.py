@@ -61,8 +61,8 @@ class ConfigUtil(object):
         fallbackEnvPath=None,
         mockTopPath=None,
         configFormat=None,
-        cachePath=".",
-        useCache=True,
+        cachePath=None,
+        useCache=False,
         appendConfigOption="CONFIG_APPEND_LOCATOR_PATHS",
         **kwargs
     ):
