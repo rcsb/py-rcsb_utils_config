@@ -157,8 +157,7 @@ class ConfigUtil(object):
         return self.__defaultSectionName
 
     def replaceSectionName(self, orgSectionName, replaceSectionName):
-        """ Set an replacement section name that will override the section name for input requests.
-        """
+        """Set an replacement section name that will override the section name for input requests."""
         try:
             self.__sectionNameD[orgSectionName] = replaceSectionName
             return True
@@ -366,7 +365,7 @@ class ConfigUtil(object):
         return copy.deepcopy(val)
 
     def getPath(self, name, default=None, sectionName=None, prefixName=None, prefixSectionName=None):
-        """ Return path associated with the input configuration option and an option prefix path.
+        """Return path associated with the input configuration option and an option prefix path.
             This method supports mocking where the MOCK_TOP_PATH will be prepended to the configuration path.
 
         Args:
@@ -414,7 +413,7 @@ class ConfigUtil(object):
         return val
 
     def getSecret(self, name, default=None, sectionName=None, tokenName="CONFIG_SUPPORT_TOKEN"):
-        """ Return a decrypted value associated with the input sensitive configuration option.
+        """Return a decrypted value associated with the input sensitive configuration option.
 
         Args:
             name (str): configuration option name
@@ -435,7 +434,7 @@ class ConfigUtil(object):
         return val
 
     def getEnvValue(self, name, default=None, sectionName=None):
-        """ Return the value of the environmental variable named as the configuration option value.
+        """Return the value of the environmental variable named as the configuration option value.
 
         Args:
             name (str): configuration option name (value is environmental variable name)
@@ -555,7 +554,7 @@ class ConfigUtil(object):
         yaml.explicit_start = True
         rD = {}
         try:
-            with open(configPath, "r") as stream:
+            with open(configPath, "r", encoding="utf-8") as stream:
                 rD = yaml.load(stream)
         except Exception as e:
             logger.error("Failed reading YAML configuration file %s with %s", configPath, str(e))
@@ -574,7 +573,7 @@ class ConfigUtil(object):
         """
         _ = kwargs
         try:
-            with open(configPath, "w") as ofh:
+            with open(configPath, "w", encoding="utf-8") as ofh:
                 configObj.write(ofh, space_around_delimiters=False)
             return True
         except Exception as e:
@@ -598,7 +597,7 @@ class ConfigUtil(object):
         yaml.explicit_start = True
         try:
             #
-            with open(configPath, "w") as ofh:
+            with open(configPath, "w", encoding="utf-8") as ofh:
                 yaml.dump(mObj, ofh)
             return True
         except Exception as e:
@@ -606,8 +605,7 @@ class ConfigUtil(object):
         return False
 
     def __extractDict(self, configObj):
-        """ Internal method to copy the contents of the input ConfigParser object to a dictionary structure.
-        """
+        """Internal method to copy the contents of the input ConfigParser object to a dictionary structure."""
         sectDict = {}
         #
         defaults = configObj.defaults()
@@ -631,7 +629,7 @@ class ConfigUtil(object):
         return sectDict
 
     def __createConfigParseObj(self, dObj, delimiter=","):
-        """ Internal method to create a configparser object from a dictionary representation
+        """Internal method to create a configparser object from a dictionary representation
         of configuration sections and objects.
 
         The dictionary object must conform to the simple configparser data model. For instance:
@@ -657,8 +655,7 @@ class ConfigUtil(object):
         return cpObj
 
     def __getKeyValue(self, dct, keyName):
-        """  Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested).
-        """
+        """Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested)."""
         try:
             kys = keyName.split(".")
             for key in kys:
@@ -673,8 +670,7 @@ class ConfigUtil(object):
         return None
 
     def __getKeyExists(self, dct, keyName):
-        """  Return the key expressed in dot notation is in the input dictionary object (nested).
-        """
+        """Return the key expressed in dot notation is in the input dictionary object (nested)."""
         try:
             kys = keyName.split(".")
             for key in kys:

@@ -28,3 +28,4 @@
  3-Feb-2020  - V0.33 Change defaults for cache behavior.
 13-May-2020  - V0.34 Update dependencies
 13-May-2020  - V0.35 Update dependencies
+22-Aug-2021  - V0.36 Update install script and fix linting issues
