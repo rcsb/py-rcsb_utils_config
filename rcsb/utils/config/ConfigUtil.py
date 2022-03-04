@@ -704,7 +704,7 @@ class ConfigUtil(object):
             box = SecretBox(hexKey, encoder=HexEncoder)
             bMsg = base64.b64decode(msg)
             dcrMsg = box.decrypt(bMsg)
-            logger.debug("type %r text %r", type(dcrMsg), dcrMsg)
+            # logger.debug("type %r text %r", type(dcrMsg), dcrMsg)
             txt = dcrMsg.decode("utf-8")
         except Exception as e:
             logger.debug("Failing with %s", str(e))
