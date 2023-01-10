@@ -30,4 +30,4 @@
 13-May-2020  - V0.35 Update dependencies
 22-Aug-2021  - V0.36 Update install script and fix linting issues
  3-Mar-2022  - V0.37 Clean-up logging messages
- 9-Jan-2023  - V0.38 Configuration changes to support tox 4
+ 9-Jan-2023  - V0.38 Configuration changes to support tox 4 and testing python 3.9
