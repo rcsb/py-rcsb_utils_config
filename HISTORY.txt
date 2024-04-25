@@ -32,3 +32,4 @@
  3-Mar-2022  - V0.37 Clean-up logging messages
  9-Jan-2023  - V0.38 Configuration changes to support tox 4 and testing python 3.9
 16-Apr-2024  - V0.39 Update setuptools config
+17-Apr-2024  - V0.40 Add support for reading in config file remotely

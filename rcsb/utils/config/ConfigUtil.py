@@ -20,6 +20,7 @@
 #                    add methods getDefaultSectionName(), replaceSectionName(), and getSectionNameReplacement()
 #   10-Mar-2019  jdw add method getEnvValue() to dereference config option as an environmental variable
 #    3-Feb-2020  jdw add __processAppendedSections() to handle nested configuration sections
+#   17-Apr-2024  dwp add support for reading in config file remotely
 ##
 """
  Manage simple configuration options.
@@ -37,6 +38,7 @@ import logging
 import os
 import sys
 import tempfile
+import requests
 
 import ruamel.yaml
 from nacl.encoding import HexEncoder
@@ -548,14 +550,21 @@ class ConfigUtil(object):
 
         """
         _ = kwargs
+        fU = FileUtil()
         yaml = ruamel.yaml.YAML()
         yaml.preserve_quotes = True
         yaml.indent(mapping=4, sequence=6, offset=4)
         yaml.explicit_start = True
         rD = {}
         try:
-            with open(configPath, "r", encoding="utf-8") as stream:
-                rD = yaml.load(stream)
+            if fU.isLocal(configPath):
+                with open(configPath, "r", encoding="utf-8") as stream:
+                    rD = yaml.load(stream)
+            else:
+                resp = requests.get(configPath, timeout=60)
+                if not resp.status_code == 200:
+                    raise ValueError("Failed to fetch remote YAML configuration file %s" & configPath)
+                rD = yaml.load(resp.content)
         except Exception as e:
             logger.error("Failed reading YAML configuration file %s with %s", configPath, str(e))
         return rD
