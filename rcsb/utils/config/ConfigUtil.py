@@ -21,6 +21,7 @@
 #   10-Mar-2019  jdw add method getEnvValue() to dereference config option as an environmental variable
 #    3-Feb-2020  jdw add __processAppendedSections() to handle nested configuration sections
 #   17-Apr-2024  dwp add support for reading in config file remotely
+#   09-Jun-2025  js cleanup temp files
 ##
 """
  Manage simple configuration options.
@@ -39,6 +40,8 @@ import os
 import sys
 import tempfile
 import requests
+import shutil
+import atexit
 
 import ruamel.yaml
 from nacl.encoding import HexEncoder
@@ -110,6 +113,8 @@ class ConfigUtil(object):
             self.__processAppendedSections(appendConfigOption, cachePath, useCache)
             if not self.__cD:
                 logger.warning("No configuration information imported - configuration path is %s (%s)", self.__myConfigPath, configFormat)
+        #
+        atexit.register(cleanup, cachePath)
 
     def __processAppendedSections(self, appendConfigOption, cachePath, useCache=True):
         """Fetch and append configuration assets assigned to input configuration option.
@@ -719,3 +724,7 @@ class ConfigUtil(object):
             logger.debug("Failing with %s", str(e))
 
         return txt
+
+    def cleanup(self, path):
+        if os.path.exists(path):
+            shutil.rmtree(path)
