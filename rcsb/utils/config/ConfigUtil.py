@@ -114,7 +114,7 @@ class ConfigUtil(object):
             if not self.__cD:
                 logger.warning("No configuration information imported - configuration path is %s (%s)", self.__myConfigPath, configFormat)
         #
-        atexit.register(cleanup, cachePath)
+        atexit.register(self.cleanup, cachePath)
 
     def __processAppendedSections(self, appendConfigOption, cachePath, useCache=True):
         """Fetch and append configuration assets assigned to input configuration option.
