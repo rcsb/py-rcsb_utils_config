@@ -110,6 +110,9 @@ class ConfigUtil(object):
             self.__processAppendedSections(appendConfigOption, cachePath, useCache)
             if not self.__cD:
                 logger.warning("No configuration information imported - configuration path is %s (%s)", self.__myConfigPath, configFormat)
+        # Pull in any configs passed via Env Vars
+        envConfigsDict = self.__getEnvConfigsDict()
+        self.__cD.update(envConfigsDict)
 
     def __processAppendedSections(self, appendConfigOption, cachePath, useCache=True):
         """Fetch and append configuration assets assigned to input configuration option.
@@ -719,3 +722,27 @@ class ConfigUtil(object):
             logger.debug("Failing with %s", str(e))
 
         return txt
+
+    def __getEnvConfigsDict(self):
+        """Build a nested config dict from CONFIG__-prefixed environment variables.
+
+        ``CONFIG__db__host=localhost`` becomes ``{"db": {"host": "localhost"}}``.
+
+        Returns:
+            dict: nested dictionary of configuration options
+        """
+        config = {}
+        keys = []
+        for key, value in os.environ.items():
+            if not key.startswith("CONFIG__"):
+                continue
+            # to be logged
+            keys.append(key)
+            try:
+                key1, key2 = key.removeprefix("CONFIG__").split("__")
+            except ValueError:
+                logger.warning("Skipping %s", key)
+                continue
+            config.setdefault(key1, {})[key2] = value
+        logger.info("Found environment configs: %s", keys)
+        return config
