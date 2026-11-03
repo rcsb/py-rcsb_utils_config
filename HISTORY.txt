@@ -35,3 +35,4 @@
 17-Apr-2024  - V0.40 Add support for reading in config file remotely
  9-Dec-2024  - V0.41 Update Azure pipelines to use latest macOS, Ubuntu, and python 3.10
  2-Dec-2025  - V0.42 Switch to 'pyproject.toml' file and hatch build system, and update pipelines to Python 3.13
+28-Aug-2026  - V0.43 Add support for pulling in configs from the environment

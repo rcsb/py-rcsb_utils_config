@@ -21,6 +21,7 @@
 #   10-Mar-2019  jdw add method getEnvValue() to dereference config option as an environmental variable
 #    3-Feb-2020  jdw add __processAppendedSections() to handle nested configuration sections
 #   17-Apr-2024  dwp add support for reading in config file remotely
+#   28-Apr-2026  mjt add support for importing configs from environment variables with ENV_ prefix
 ##
 """
  Manage simple configuration options.
@@ -364,6 +365,8 @@ class ConfigUtil(object):
             if logMissing:
                 logger.debug("Missing config option %r (%r) assigned default value %r (%s)", name, mySection, default, str(e))
         #
+        if val.startswith("ENV_"):
+            val = os.environ.get(val, default)
         return copy.deepcopy(val)
 
     def getPath(self, name, default=None, sectionName=None, prefixName=None, prefixSectionName=None):
